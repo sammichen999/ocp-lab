@@ -1,0 +1,2124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>奖品动销看板 · 腾讯文档版</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f7fb;
+            color: #1e293b;
+            padding: 24px;
+        }
+        .container {
+            max-width: 1550px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+        .header h1 small {
+            font-size: 14px;
+            font-weight: 400;
+            color: #64748b;
+            margin-left: 12px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 8px 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.15s;
+            background: #fff;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: #fff;
+            border-color: #3b82f6;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        .btn-success {
+            background: #22c55e;
+            color: #fff;
+            border-color: #22c55e;
+        }
+        .btn-success:hover {
+            background: #16a34a;
+        }
+        .btn-warning {
+            background: #f59e0b;
+            color: #fff;
+            border-color: #f59e0b;
+        }
+        .btn-warning:hover {
+            background: #d97706;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #cbd5e1;
+        }
+        .btn-outline:hover {
+            background: #f1f5f9;
+        }
+
+        .upload-panel {
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #eef2f6;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            display: none;
+        }
+        .upload-panel.open {
+            display: block;
+        }
+        .upload-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin-top: 12px;
+        }
+        .upload-item {
+            border: 2px dashed #d1d5db;
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+            transition: 0.2s;
+            background: #fafbfc;
+        }
+        .upload-item:hover {
+            border-color: #3b82f6;
+            background: #f8fafc;
+        }
+        .upload-item .label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1e293b;
+        }
+        .upload-item .hint {
+            font-size: 12px;
+            color: #94a3b8;
+            margin: 4px 0 10px;
+        }
+        .upload-item input[type="file"] {
+            font-size: 13px;
+            max-width: 100%;
+            padding: 4px;
+        }
+        .upload-item .status {
+            font-size: 13px;
+            margin-top: 8px;
+            color: #22c55e;
+        }
+
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .kpi-card {
+            background: #fff;
+            padding: 16px 20px;
+            border-radius: 12px;
+            border: 1px solid #eef2f6;
+        }
+        .kpi-card .label {
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .kpi-card .value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-top: 4px;
+        }
+        .kpi-card .sub {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        .kpi-card.danger .value {
+            color: #ef4444;
+        }
+        .kpi-card.warning .value {
+            color: #f59e0b;
+        }
+
+        .tabs-wrapper {
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #eef2f6;
+            padding: 4px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 2px;
+        }
+        .tab-item {
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #64748b;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            white-space: nowrap;
+            transition: 0.15s;
+            flex-shrink: 0;
+        }
+        .tab-item.active {
+            background: #3b82f6;
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+        }
+        .tab-item:hover:not(.active) {
+            background: #f1f5f9;
+        }
+        .tab-item .badge-tab {
+            display: inline-block;
+            background: #e2e8f0;
+            color: #475569;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 0 8px;
+            border-radius: 10px;
+            margin-left: 4px;
+        }
+        .tab-item.active .badge-tab {
+            background: rgba(255, 255, 255, 0.25);
+            color: #fff;
+        }
+
+        .table-wrap {
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #eef2f6;
+            overflow: hidden;
+            position: relative;
+            max-height: 560px;
+            overflow-y: auto;
+        }
+        .table-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            min-width: 1200px;
+        }
+        .table-wrap thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .table-wrap thead th {
+            background: #f1f5f9;
+            color: #475569;
+            font-weight: 600;
+            border-bottom: 2px solid #e2e8f0;
+            padding: 10px 12px;
+            text-align: left;
+            white-space: nowrap;
+            font-size: 12px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+        .table-wrap thead th .th-inner {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .table-wrap thead th .sort-indicator {
+            font-size: 11px;
+            margin-left: 2px;
+        }
+        .table-wrap thead th .sort-indicator.asc {
+            color: #3b82f6;
+        }
+        .table-wrap thead th .sort-indicator.desc {
+            color: #3b82f6;
+        }
+        .table-wrap thead th .sort-indicator.inactive {
+            color: #cbd5e1;
+        }
+        .table-wrap thead th .filter-icon {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-left: 2px;
+            cursor: pointer;
+            padding: 0 2px;
+        }
+        .table-wrap thead th .filter-icon.active {
+            color: #3b82f6;
+        }
+        .table-wrap thead th .filter-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 0;
+            min-width: 160px;
+            max-height: 220px;
+            overflow-y: auto;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            z-index: 30;
+            margin-top: 2px;
+        }
+        .table-wrap thead th .filter-dropdown.open {
+            display: block;
+        }
+        .table-wrap thead th .filter-dropdown .filter-option {
+            padding: 5px 16px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .table-wrap thead th .filter-dropdown .filter-option:hover {
+            background: #f1f5f9;
+        }
+        .table-wrap thead th .filter-dropdown .filter-option input[type="checkbox"] {
+            margin: 0;
+            cursor: pointer;
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+        }
+        .table-wrap thead th .filter-dropdown .filter-option .count {
+            color: #94a3b8;
+            font-size: 11px;
+            margin-left: auto;
+        }
+        .table-wrap thead th .filter-dropdown .filter-option .badge-mini {
+            font-size: 11px;
+            padding: 1px 8px;
+            border-radius: 12px;
+        }
+        .table-wrap thead th .filter-dropdown .filter-actions {
+            padding: 6px 16px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+            padding-top: 8px;
+            flex-wrap: wrap;
+        }
+        .table-wrap thead th .filter-dropdown .filter-actions button {
+            padding: 4px 12px;
+            border-radius: 4px;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+            background: #f1f5f9;
+            color: #475569;
+            transition: 0.15s;
+        }
+        .table-wrap thead th .filter-dropdown .filter-actions button:hover {
+            background: #e2e8f0;
+        }
+        .table-wrap thead th .filter-dropdown .filter-actions button.primary {
+            background: #3b82f6;
+            color: #fff;
+        }
+        .table-wrap thead th .filter-dropdown .filter-actions button.primary:hover {
+            background: #2563eb;
+        }
+
+        .table-wrap tbody td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .table-wrap tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .table-wrap tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .sku-name {
+            font-weight: 500;
+            color: #0f172a;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-red {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        .badge-yellow {
+            background: #fffbeb;
+            color: #d97706;
+        }
+        .badge-green {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+        .badge-blue {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+        .badge-gray {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        .badge-purple {
+            background: #f3e8ff;
+            color: #7c3aed;
+        }
+        .empty {
+            text-align: center;
+            padding: 48px 20px;
+            color: #94a3b8;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: #64748b;
+            flex-wrap: wrap;
+            background: #fff;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid #eef2f6;
+        }
+        .legend .dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 4px;
+            margin-right: 4px;
+        }
+        .legend .dot.purple {
+            background: #7c3aed;
+        }
+        .legend .dot.gray {
+            background: #94a3b8;
+        }
+        .legend .dot.red {
+            background: #dc2626;
+        }
+
+        .data-toggle {
+            margin-top: 24px;
+            text-align: center;
+        }
+        .data-toggle button {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 8px;
+        }
+        .raw-data {
+            margin-top: 12px;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-family: monospace;
+            overflow-x: auto;
+            max-height: 320px;
+            overflow-y: auto;
+            display: none;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .raw-data.open {
+            display: block;
+        }
+
+        .text-danger {
+            color: #ef4444;
+        }
+        .text-success {
+            color: #22c55e;
+        }
+        .text-warning {
+            color: #f59e0b;
+        }
+        .text-muted {
+            color: #94a3b8;
+        }
+        .text-purple {
+            color: #7c3aed;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal-box {
+            background: #fff;
+            border-radius: 16px;
+            padding: 32px 36px;
+            max-width: 540px;
+            width: 92%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.25s ease;
+        }
+        .modal-box .modal-icon {
+            font-size: 40px;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .modal-box h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0f172a;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .modal-box .sub {
+            font-size: 14px;
+            color: #64748b;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .modal-box .unmatched-list {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 12px 16px;
+            max-height: 160px;
+            overflow-y: auto;
+            margin-bottom: 16px;
+        }
+        .modal-box .unmatched-list .item {
+            font-size: 14px;
+            color: #dc2626;
+            padding: 4px 0;
+            border-bottom: 1px solid #fee2e2;
+            font-weight: 500;
+        }
+        .modal-box .unmatched-list .item:last-child {
+            border-bottom: none;
+        }
+        .modal-box .btn-close-modal {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .modal-box .btn-close-modal:hover {
+            background: #2563eb;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* 原始数据表格样式 */
+        .raw-section {
+            margin-bottom: 24px;
+        }
+        .raw-section h4 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            color: #334155;
+            font-weight: 600;
+        }
+        .raw-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .raw-table th {
+            background: #f1f5f9;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .raw-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+        }
+        .raw-table tr:hover {
+            background: #f8fafc;
+        }
+        .raw-table tr.unmatched-row {
+            background: #fef9c3 !important;
+        }
+        .raw-table tr.unmatched-row td {
+            color: #854d0e;
+        }
+        .unmatched-badge {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 2px 6px;
+            background: #eab308;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 600;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 16px;
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .upload-grid {
+                grid-template-columns: 1fr;
+            }
+            .kpi-row {
+                grid-template-columns: 1fr 1fr;
+            }
+            .tab-item {
+                padding: 6px 14px;
+                font-size: 13px;
+            }
+            .modal-box {
+                padding: 24px 20px;
+            }
+            .table-wrap {
+                max-height: 400px;
+            }
+            .table-wrap thead th {
+                font-size: 11px;
+                padding: 8px 8px;
+            }
+            .table-wrap tbody td {
+                font-size: 12px;
+                padding: 8px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>📦 奖品动销看板 <small>腾讯文档版 · 实际天数 + 计划关账时间</small></h1>
+            <div class="btn-group">
+                <a class="btn btn-outline" href="https://docs.qq.com/sheet/DVWp3bVdyRm9XdmRa?tab=f6bvwn" target="_blank" style="font-size:12px; padding:6px 10px; text-decoration:none;" title="入库总表">📥 入库总表</a>
+                <a class="btn btn-outline" href="https://docs.qq.com/sheet/DVWp3bVdyRm9XdmRa?tab=c5fbc8" target="_blank" style="font-size:12px; padding:6px 10px; text-decoration:none;" title="活动锁定表">🔒 活动锁定</a>
+                <a class="btn btn-outline" href="https://docs.qq.com/sheet/DVWp3bVdyRm9XdmRa?tab=lqsqby" target="_blank" style="font-size:12px; padding:6px 10px; text-decoration:none;" title="发放流水表">📤 发放流水</a>
+                <button class="btn btn-primary" @click="syncFromTencentDocs" :disabled="syncing">
+                    <span v-if="!syncing">☁️ 加载数据</span>
+                    <span v-else>⏳ 同步中…</span>
+                </button>
+                <button class="btn btn-warning" @click="resetData">🔄 重置</button>
+                <button class="btn btn-outline" @click="toggleRawData">📄 查看源数据</button>
+            </div>
+        </div>
+
+        <!-- 同步状态面板 -->
+        <div style="background:#fff; border-radius:12px; border:1px solid #eef2f6; padding:16px 24px; margin-bottom:24px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+            <div style="font-size:13px; color:#64748b;">
+                <span v-if="lastSyncTime" style="color:#22c55e;">✅ 已同步于 {{ lastSyncTime }}</span>
+                <span v-else-if="!syncing">⚠️ 请点击「加载数据」同步库存</span>
+                <span v-else>⏳ 正在从腾讯文档拉取数据，请稍候…</span>
+            </div>
+            <div v-if="lastSyncTime" style="font-size:12px; color:#94a3b8;">
+                入库 {{ inbound.length }} 条 &middot; 活动锁定 {{ allocations.length }} 条 &middot; 发放流水 {{ consumptions.length }} 条
+            </div>
+        </div>
+        <div class="kpi-row">
+            <div class="kpi-card">
+                <div class="label">总可发量</div>
+                <div class="value">{{ kpi.totalAvailable }}</div>
+                <div class="sub">可发库存合计</div>
+            </div>
+            <div class="kpi-card">
+                <div class="label">实物总库存</div>
+                <div class="value">{{ kpi.totalPhysical }}</div>
+                <div class="sub">入库汇总</div>
+            </div>
+            <div class="kpi-card">
+                <div class="label">SKU 数</div>
+                <div class="value">{{ kpi.totalSku }}</div>
+                <div class="sub">在库商品种类</div>
+            </div>
+            <div class="kpi-card danger">
+                <div class="label">滞销 SKU</div>
+                <div class="value">{{ kpi.slowSku }}</div>
+                <div class="sub">可发月 &gt; 6</div>
+            </div>
+            <div class="kpi-card warning">
+                <div class="label">可发待规划</div>
+                <div class="value">{{ kpi.planningSku }}</div>
+                <div class="sub">有可发库存</div>
+            </div>
+        </div>
+
+        <!-- 图例 -->
+        <div class="legend">
+            <span>📌 已关账 → 扣实际发放</span>
+            <span>📌 未关账 → 扣冻结量</span>
+            <span style="color:#94a3b8; margin-left:8px;">｜</span>
+            <span>📊 实际剩余天数 = 可发量 ÷ 近14天日均消耗</span>
+            <span>🎯 人工预估剩余 = 计划关账时间（腾讯文档）- 今天</span>
+        </div>
+
+        <!-- 动态Tabs -->
+        <div class="tabs-wrapper">
+            <button class="tab-item" :class="{ active: activeTab === '__overview__' }"
+            @click="switchTab('__overview__')">
+            📊 库存总览
+            <span class="badge-tab">{{ overviewSkuCount }}</span>
+        </button>
+
+        <button class="tab-item" v-for="act in activityTabs" :key="act"
+        :class="{ active: activeTab === act }"
+        @click="switchTab(act)">
+        {{ act }}
+        <span class="badge-tab">{{ getActivitySkuCount(act) }}</span>
+    </button>
+
+    <button class="tab-item" :class="{ active: activeTab === '__planning__' }"
+    @click="switchTab('__planning__')">
+    📋 可发待规划
+    <span class="badge-tab">{{ planningSkuCount }}</span>
+</button>
+</div>
+
+<!-- ===== 表格 ===== -->
+<div class="table-wrap">
+    <!-- 库存总览 Tab -->
+    <template v-if="activeTab === '__overview__'">
+        <table>
+            <thead>
+                <tr>
+                    <th @click="sortBy('inboundDate')" style="min-width:90px;">
+                        <span class="th-inner">
+                            入库时间
+                            <span class="sort-indicator" :class="getSortClass('inboundDate')">
+                                {{ getSortIcon('inboundDate') }}
+                            </span>
+                        </span>
+                    </th>
+                    <th @click="sortBy('name')" style="min-width:150px;">
+                        <span class="th-inner">
+                            权益名称
+                            <span class="filter-icon" :class="{ active: isFilterActive('name') }"
+                            @click.stop="toggleFilter('name')">🔽</span>
+                            <span class="sort-indicator" :class="getSortClass('name')">
+                                {{ getSortIcon('name') }}
+                            </span>
+                        </span>
+                        <div class="filter-dropdown" :class="{ open: activeFilter === 'name' }" @click.stop>
+                            <div class="filter-option" v-for="opt in nameFilterOptions" :key="opt.value">
+                                <input type="checkbox" :value="opt.value"
+                                v-model="nameFilterSelectedTemp" />
+                                <span>{{ opt.value }}</span>
+                                <span class="count">{{ opt.count }}</span>
+                            </div>
+                            <div class="filter-actions">
+                                <button @click="selectAllNameFilter">全选</button>
+                                <button @click="clearNameFilterTemp">清空</button>
+                                <button class="primary" @click="applyNameFilter">应用</button>
+                                <button @click="cancelFilter">取消</button>
+                            </div>
+                        </div>
+                    </th>
+                    <th @click="sortBy('physical')" style="text-align:right;">
+                        <span class="th-inner" style="justify-content:flex-end;">
+                            实物库存
+                            <span class="sort-indicator" :class="getSortClass('physical')">
+                                {{ getSortIcon('physical') }}
+                            </span>
+                        </span>
+                    </th>
+                    <th @click="sortBy('closedConsumed')" style="text-align:right;">
+                        <span class="th-inner" style="justify-content:flex-end;">
+                            已关账消耗
+                            <span class="sort-indicator" :class="getSortClass('closedConsumed')">
+                                {{ getSortIcon('closedConsumed') }}
+                            </span>
+                        </span>
+                    </th>
+                    <th @click="sortBy('openFrozen')" style="text-align:right;">
+                        <span class="th-inner" style="justify-content:flex-end;">
+                            未关账冻结
+                            <span class="sort-indicator" :class="getSortClass('openFrozen')">
+                                {{ getSortIcon('openFrozen') }}
+                            </span>
+                        </span>
+                    </th>
+                    <th @click="sortBy('lockedTotal')" style="text-align:right;">
+                        <span class="th-inner" style="justify-content:flex-end;">
+                            总锁定/消耗
+                            <span class="sort-indicator" :class="getSortClass('lockedTotal')">
+                                {{ getSortIcon('lockedTotal') }}
+                            </span>
+                        </span>
+                    </th>
+                    <th @click="sortBy('available')" style="text-align:right; font-weight:700;">
+                        <span class="th-inner" style="justify-content:flex-end;">
+                            剩余库存
+                            <span class="sort-indicator" :class="getSortClass('available')">
+                                {{ getSortIcon('available') }}
+                            </span>
+                        </span>
+                    </th>
+                    <th @click="sortBy('dailySales14d')" style="text-align:right;">
+                        <span class="th-inner" style="justify-content:flex-end;">
+                            近14天消耗
+                            <span class="sort-indicator" :class="getSortClass('dailySales14d')">
+                                {{ getSortIcon('dailySales14d') }}
+                            </span>
+                        </span>
+                    </th>
+                    <th @click="sortBy('actualDays')" style="text-align:right;">
+                        <span class="th-inner" style="justify-content:flex-end;">
+                            实际剩余天数
+                            <span class="sort-indicator" :class="getSortClass('actualDays')">
+                                {{ getSortIcon('actualDays') }}
+                            </span>
+                        </span>
+                    </th>
+                    <th @click="sortBy('manualDays')" style="text-align:right;">
+                        <span class="th-inner" style="justify-content:flex-end;">
+                            人工预估剩余
+                            <span class="sort-indicator" :class="getSortClass('manualDays')">
+                                {{ getSortIcon('manualDays') }}
+                            </span>
+                        </span>
+                    </th>
+                    <th @click="sortBy('healthLabel')">
+                        <span class="th-inner">
+                            健康
+                            <span class="filter-icon" :class="{ active: isFilterActive('health') }"
+                            @click.stop="toggleFilter('health')">🔽</span>
+                            <span class="sort-indicator" :class="getSortClass('healthLabel')">
+                                {{ getSortIcon('healthLabel') }}
+                            </span>
+                        </span>
+                        <div class="filter-dropdown" :class="{ open: activeFilter === 'health' }" @click.stop>
+                            <div class="filter-option" v-for="opt in healthFilterOptions" :key="opt.value">
+                                <input type="checkbox" :value="opt.value"
+                                v-model="healthFilterSelectedTemp" />
+                                <span class="badge-mini" :class="opt.badgeClass">{{ opt.value }}</span>
+                                <span class="count">{{ opt.count }}</span>
+                            </div>
+                            <div class="filter-actions">
+                                <button @click="selectAllHealthFilter">全选</button>
+                                <button @click="clearHealthFilterTemp">清空</button>
+                                <button class="primary" @click="applyHealthFilter">应用</button>
+                                <button @click="cancelFilter">取消</button>
+                            </div>
+                        </div>
+                    </th>
+                    <th @click="sortBy('estimatedEnd')">
+                        <span class="th-inner">
+                            预计发放到何时
+                            <span class="sort-indicator" :class="getSortClass('estimatedEnd')">
+                                {{ getSortIcon('estimatedEnd') }}
+                            </span>
+                        </span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-if="filteredOverviewData.length === 0">
+                    <td colspan="12" class="empty">暂无数据</td>
+                </tr>
+                <tr v-for="item in sortedOverviewData" :key="item.name">
+                    <td style="font-size:12px; color:#64748b;">{{ item.inboundDate || '—' }}</td>
+                    <td class="sku-name">{{ item.name }}</td>
+                    <td style="text-align:right; font-weight:500;">{{ item.physical }}</td>
+                    <td style="text-align:right; color:#dc2626; font-weight:500;">{{ item.closedConsumed }}</td>
+                    <td style="text-align:right; color:#f59e0b; font-weight:500;">{{ item.openFrozen }}</td>
+                    <td style="text-align:right; font-weight:500;">{{ item.lockedTotal }}</td>
+                    <td style="text-align:right; font-weight:700; font-size:16px;"
+                    :class="item.available < 0 ? 'text-danger' : item.available === 0 ? 'text-warning' : 'text-success'">
+                    {{ item.available }}
+                </td>
+                <td style="text-align:right;">{{ item.dailySales14d || 0 }}</td>
+                <td style="text-align:right; font-weight:600;">
+                    {{ item.actualDays === Infinity ? '∞' : Math.round(item.actualDays) }}
+                </td>
+                <td style="text-align:right; font-weight:600; color:#7c3aed;">
+                    {{ item.manualDays === -1 ? '需更新预估时间' : (item.manualDays !== null && item.manualDays > 0 ? Math.round(item.manualDays) : '—') }}
+                </td>
+                <td><span class="badge" :class="item.badgeClass">{{ item.healthLabel }}</span></td>
+                <td>{{ item.estimatedEnd || '—' }}</td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr style="background:#f8fafc; font-weight:600; border-top:2px solid #e2e8f0;">
+                <td><b>📦 合计</b></td>
+                <td style="text-align:right;">—</td>
+                <td style="text-align:right;"><b>{{ summaryTotal.physical }}</b></td>
+                <td style="text-align:right;"><b>{{ summaryTotal.closedConsumed }}</b></td>
+                <td style="text-align:right;"><b>{{ summaryTotal.openFrozen }}</b></td>
+                <td style="text-align:right;"><b>{{ summaryTotal.lockedTotal }}</b></td>
+                <td style="text-align:right; font-size:18px; font-weight:700;"
+                :class="summaryTotal.available < 0 ? 'text-danger' : 'text-success'">
+                {{ summaryTotal.available }}
+            </td>
+            <td style="text-align:right;"><b>{{ summaryTotal.dailySales14d.toFixed(1) }}</b></td>
+            <td style="text-align:right;">—</td>
+            <td style="text-align:right;">—</td>
+            <td style="text-align:right;">—</td>
+            <td style="text-align:right;">—</td>
+        </tr>
+    </tfoot>
+</table>
+</template>
+
+<!-- 活动Tab + 可发待规划 -->
+<template v-else>
+    <table>
+        <thead>
+            <tr>
+                <th @click="sortBy('inboundDate')" style="min-width:90px;">
+                    <span class="th-inner">
+                        入库时间
+                        <span class="sort-indicator" :class="getSortClass('inboundDate')">
+                            {{ getSortIcon('inboundDate') }}
+                        </span>
+                    </span>
+                </th>
+                <th @click="sortBy('name')" style="min-width:150px;">
+                    <span class="th-inner">
+                        权益名称
+                        <span class="filter-icon" :class="{ active: isFilterActive('name') }"
+                        @click.stop="toggleFilter('name')">🔽</span>
+                        <span class="sort-indicator" :class="getSortClass('name')">
+                            {{ getSortIcon('name') }}
+                        </span>
+                    </span>
+                    <div class="filter-dropdown" :class="{ open: activeFilter === 'name' }" @click.stop>
+                        <div class="filter-option" v-for="opt in nameFilterOptions" :key="opt.value">
+                            <input type="checkbox" :value="opt.value"
+                            v-model="nameFilterSelectedTemp" />
+                            <span>{{ opt.value }}</span>
+                            <span class="count">{{ opt.count }}</span>
+                        </div>
+                        <div class="filter-actions">
+                            <button @click="selectAllNameFilter">全选</button>
+                            <button @click="clearNameFilterTemp">清空</button>
+                            <button class="primary" @click="applyNameFilter">应用</button>
+                            <button @click="cancelFilter">取消</button>
+                        </div>
+                    </div>
+                </th>
+                <th style="text-align:right;">
+                    <span class="th-inner" style="justify-content:flex-end;">计划分配</span>
+                </th>
+                <th style="text-align:right;">
+                    <span class="th-inner" style="justify-content:flex-end;">实际发放</span>
+                </th>
+                <th>
+                    <span class="th-inner">状态</span>
+                </th>
+                <th style="text-align:right;">
+                    <span class="th-inner" style="justify-content:flex-end;">冻结量</span>
+                </th>
+                <th @click="sortBy('planRemaining')" style="text-align:right;">
+                    <span class="th-inner" style="justify-content:flex-end;">
+                        剩余库存
+                        <span class="sort-indicator" :class="getSortClass('planRemaining')">
+                            {{ getSortIcon('planRemaining') }}
+                        </span>
+                    </span>
+                </th>
+                <th @click="sortBy('dailySales14d')" style="text-align:right;">
+                    <span class="th-inner" style="justify-content:flex-end;">
+                        近14天消耗
+                        <span class="sort-indicator" :class="getSortClass('dailySales14d')">
+                            {{ getSortIcon('dailySales14d') }}
+                        </span>
+                    </span>
+                </th>
+                <th @click="sortBy('actualDays')" style="text-align:right;">
+                    <span class="th-inner" style="justify-content:flex-end;">
+                        实际剩余天数
+                        <span class="sort-indicator" :class="getSortClass('actualDays')">
+                            {{ getSortIcon('actualDays') }}
+                        </span>
+                    </span>
+                </th>
+                <th @click="sortBy('manualDays')" style="text-align:right;">
+                    <span class="th-inner" style="justify-content:flex-end;">
+                        人工预估剩余
+                        <span class="sort-indicator" :class="getSortClass('manualDays')">
+                            {{ getSortIcon('manualDays') }}
+                        </span>
+                    </span>
+                </th>
+                <th @click="sortBy('healthLabel')">
+                    <span class="th-inner">
+                        健康
+                        <span class="filter-icon" :class="{ active: isFilterActive('health') }"
+                        @click.stop="toggleFilter('health')">🔽</span>
+                        <span class="sort-indicator" :class="getSortClass('healthLabel')">
+                            {{ getSortIcon('healthLabel') }}
+                        </span>
+                    </span>
+                    <div class="filter-dropdown" :class="{ open: activeFilter === 'health' }" @click.stop>
+                        <div class="filter-option" v-for="opt in healthFilterOptions" :key="opt.value">
+                            <input type="checkbox" :value="opt.value"
+                            v-model="healthFilterSelectedTemp" />
+                            <span class="badge-mini" :class="opt.badgeClass">{{ opt.value }}</span>
+                            <span class="count">{{ opt.count }}</span>
+                        </div>
+                        <div class="filter-actions">
+                            <button @click="selectAllHealthFilter">全选</button>
+                            <button @click="clearHealthFilterTemp">清空</button>
+                            <button class="primary" @click="applyHealthFilter">应用</button>
+                            <button @click="cancelFilter">取消</button>
+                        </div>
+                    </div>
+                </th>
+                <th @click="sortBy('estimatedEnd')">
+                    <span class="th-inner">
+                        预计发放到何时
+                        <span class="sort-indicator" :class="getSortClass('estimatedEnd')">
+                            {{ getSortIcon('estimatedEnd') }}
+                        </span>
+                    </span>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-if="filteredCurrentTabData.length === 0">
+                <td colspan="12" class="empty">
+                    {{ activeTab === '__planning__' ? '🎉 所有SKU暂无剩余库存' : '该活动暂无关联SKU' }}
+                </td>
+            </tr>
+            <tr v-for="item in sortedCurrentTabData" :key="item.sku">
+                <td style="font-size:12px; color:#64748b;">{{ item.inboundDate || '—' }}</td>
+                <td class="sku-name">{{ item.name }}</td>
+                <td style="text-align:right;">{{ item.planQty || 0 }}</td>
+                <td style="text-align:right;">{{ item.actualQty || 0 }}</td>
+                <td><span class="badge" :class="item.isClosed ? 'badge-gray' : 'badge-blue'">{{ item.status }}</span></td>
+                <td style="text-align:right;">{{ item.freezeQty || 0 }}</td>
+                <td style="text-align:right; font-weight:700; font-size:15px;"
+                    :class="item.planRemaining < 0 ? 'text-danger' : item.planRemaining === 0 ? 'text-warning' : 'text-success'">
+                    {{ item.planRemaining }}
+                </td>
+                <td style="text-align:right;">{{ item.dailySales14d || 0 }}</td>
+                <td style="text-align:right; font-weight:600;">
+                    {{ item.actualDays === Infinity ? '∞' : Math.round(item.actualDays) }}
+                </td>
+                <td style="text-align:right; font-weight:600; color:#7c3aed;">
+                    {{ item.manualDays === -1 ? '需更新预估时间' : (item.manualDays !== null && item.manualDays > 0 ? Math.round(item.manualDays) : '—') }}
+                </td>
+                <td><span class="badge" :class="item.badgeClass">{{ item.healthLabel }}</span></td>
+                <td>{{ item.estimatedEnd || '—' }}</td>
+            </tr>
+        </tbody>
+    </table>
+</template>
+</div>
+
+<!-- 原始数据 -->
+<div class="data-toggle"><button @click="toggleRawData">📂 显示 / 隐藏 原始源表数据</button></div>
+<div class="raw-data" :class="{ open: showRaw }">
+    <!-- 入库总表 -->
+    <div class="raw-section" v-if="inbound.length > 0">
+        <h4>📦 入库总表 ({{ inbound.length }} 条)</h4>
+        <table class="raw-table">
+            <thead>
+                <tr>
+                    <th>权益名称</th>
+                    <th>期初数量</th>
+                    <th>入库日期</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(row, idx) in inbound" :key="'in-'+idx">
+                    <td>{{ row.name }}</td>
+                    <td>{{ row.qty }}</td>
+                    <td>{{ row.date }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- 活动锁定表 -->
+    <div class="raw-section" v-if="allocations.length > 0">
+        <h4>🎯 活动锁定表 ({{ allocations.length }} 条)</h4>
+        <table class="raw-table">
+            <thead>
+                <tr>
+                    <th>权益名称</th>
+                    <th>活动</th>
+                    <th>状态</th>
+                    <th>实际发放</th>
+                    <th>冻结量</th>
+                    <th>人工预估完成时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(row, idx) in allocations" :key="'alloc-'+idx">
+                    <td>{{ row.name }}</td>
+                    <td>{{ row.activity }}</td>
+                    <td>{{ row.status }}</td>
+                    <td>{{ row.actualQty }}</td>
+                    <td>{{ row.freezeQty }}</td>
+                    <td>{{ row.manualEndDate || '—' }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- 发放流水表 -->
+    <div class="raw-section" v-if="consumptions.length > 0">
+        <h4>📝 发放流水表 ({{ consumptions.length }} 条)</h4>
+        <table class="raw-table">
+            <thead>
+                <tr>
+                    <th>权益名称</th>
+                    <th>货品编号</th>
+                    <th>活动</th>
+                    <th>订单时间</th>
+                    <th>货品数量</th>
+                    <th>备注</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(row, idx) in consumptions" :key="'cons-'+idx" :class="{ 'unmatched-row': isUnmatched(row) }">
+                    <td>
+                        {{ row.name || getRowRaw(row, '权益名称', '商品名称', 'name', 'SKU名称') }}
+                        <span v-if="isUnmatched(row)" class="unmatched-badge">未匹配</span>
+                    </td>
+                    <td>{{ getRowRaw(row, '货品编号', 'sku', 'SKU编号', '货号') }}</td>
+                    <td>{{ getRowRaw(row, '活动', '活动名称', 'activity') }}</td>
+                    <td>{{ row.date || getRowRaw(row, '订单时间', '发放日期', '日期', 'date', '消耗日期') }}</td>
+                    <td>{{ row.qty || getRowRaw(row, '货品数量', '数量', 'qty', '发放数量') }}</td>
+                    <td>{{ getRowRaw(row, '备注', 'remark', 'note') || '—' }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 弹窗 -->
+<div class="modal-overlay" v-if="modalVisible" @click.self="modalVisible = false">
+    <div class="modal-box">
+        <div class="modal-icon">⚠️</div>
+        <h2>发放流水导入警告</h2>
+        <p class="sub">以下权益名称在入库总表中未匹配到，导入后将以黄色高亮显示</p>
+        <div class="unmatched-list">
+            <div class="item" v-for="name in modalUnmatched" :key="name">• {{ name }}</div>
+        </div>
+        <button class="btn-close-modal" @click="continueImport">继续导入</button>
+    </div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.min.js">
+</script>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            activeTab: '__overview__',
+            showUpload: false,
+            showRaw: false,
+            syncing: false,
+            lastSyncTime: null,
+            fromLocal: false,
+            dataSource: null,
+            inbound: [],
+            allocations: [],
+            consumptions: [],
+            computedItems: [],
+            kpi: { totalAvailable: 0, totalPhysical: 0, totalSku: 0, slowSku: 0, planningSku: 0 },
+            modalVisible: false,
+            modalUnmatched: [],
+            unmatchedNames: new Set(),
+            sortField: 'actualDays',
+            sortAsc: false,
+            activeFilter: null,
+            nameFilterApplied: [],
+            healthFilterApplied: [],
+            nameFilterSelectedTemp: [],
+            healthFilterSelectedTemp: []
+        },
+        computed: {
+            activityTabs() {
+                const acts = new Set();
+                this.allocations.forEach(r => {
+                    if (r.activity && r.activity.trim()) {
+                        acts.add(r.activity.trim());
+                    }
+                });
+                const priority = ['福利社', '会员日'];
+                const sorted = Array.from(acts).sort((a, b) => {
+                    const aIdx = priority.indexOf(a);
+                    const bIdx = priority.indexOf(b);
+                    if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+                    if (aIdx !== -1) return -1;
+                    if (bIdx !== -1) return 1;
+                    return a.localeCompare(b, 'zh');
+                });
+                return sorted;
+            },
+
+            getActivitySkuCount() {
+                return (act) => {
+                    const skus = new Set();
+                    this.allocations.forEach(r => {
+                        if (r.activity === act && r.name) skus.add(r.name);
+                    });
+                    return skus.size;
+                };
+            },
+
+            overviewSkuCount() {
+                return this.computedItems.length;
+            },
+
+            planningSkuCount() {
+                let count = 0;
+                this.computedItems.forEach(item => {
+                    if (item.available > 0) count++;
+                });
+                return count;
+            },
+
+            currentDataSource() {
+                if (this.activeTab === '__overview__') {
+                    return this.baseOverviewData;
+                }
+                return this.baseCurrentTabData;
+            },
+
+            baseOverviewData() {
+                const today = new Date('2026-06-23');
+                return this.computedItems.map(item => {
+                    const enriched = this.enrichItem(item, today);
+                    const inboundRecords = this.inbound.filter(r => r.name === item.name);
+                    let inboundDate = null;
+                    if (inboundRecords.length > 0) {
+                        const dates = inboundRecords.map(r => r.date).filter(d => d);
+                        if (dates.length > 0) {
+                            dates.sort();
+                            inboundDate = dates[0];
+                        }
+                    }
+                    return { ...enriched, inboundDate: inboundDate };
+                });
+            },
+
+            baseCurrentTabData() {
+                const today = new Date('2026-06-23');
+                const list = this.computedItems.map(item => {
+                    const enriched = this.enrichItem(item, today);
+                    const inboundRecords = this.inbound.filter(r => r.name === item.name);
+                    let inboundDate = null;
+                    if (inboundRecords.length > 0) {
+                        const dates = inboundRecords.map(r => r.date).filter(d => d);
+                        if (dates.length > 0) {
+                            dates.sort();
+                            inboundDate = dates[0];
+                        }
+                    }
+                    return { ...enriched, inboundDate: inboundDate };
+                });
+
+                if (this.activeTab === '__planning__') {
+                    return list.filter(i => i.available > 0);
+                }
+
+                const act = this.activeTab;
+                const actSkus = new Set();
+                this.allocations.forEach(r => {
+                    if (r.activity === act && r.name) actSkus.add(r.name);
+                });
+                return list.filter(i => actSkus.has(i.name));
+            },
+
+            nameFilterOptions() {
+                const map = {};
+                const data = this.currentDataSource;
+                data.forEach(item => {
+                    const val = item.name;
+                    if (!map[val]) map[val] = 0;
+                    map[val]++;
+                });
+                return Object.keys(map).map(k => ({ value: k, count: map[k] })).sort((a, b) => a.value.localeCompare(b
+                    .value, 'zh'));
+            },
+
+            healthFilterOptions() {
+                const map = {};
+                const data = this.currentDataSource;
+                const order = ['需关注', '偏慢', '正常', '快消', '无动销', '超发异常'];
+                data.forEach(item => {
+                    const val = item.healthLabel || '未知';
+                    if (!map[val]) map[val] = 0;
+                    map[val]++;
+                });
+                const badgeMap = {
+                    '需关注': 'badge-red',
+                    '偏慢': 'badge-yellow',
+                    '正常': 'badge-green',
+                    '快消': 'badge-blue',
+                    '无动销': 'badge-gray',
+                    '超发异常': 'badge-gray'
+                };
+                return order.filter(k => map[k]).map(k => ({ value: k, count: map[k], badgeClass: badgeMap[k] || 'badge-gray' }));
+            },
+
+            isFilterActive() {
+                return (type) => {
+                    if (type === 'name') return this.nameFilterApplied.length > 0 && this.nameFilterApplied.length < this
+                        .nameFilterOptions.length;
+                    if (type === 'health') return this.healthFilterApplied.length > 0 && this.healthFilterApplied
+                        .length < this.healthFilterOptions.length;
+                    return false;
+                };
+            },
+
+            filteredOverviewData() {
+                let data = this.baseOverviewData;
+                if (this.nameFilterApplied.length > 0) {
+                    data = data.filter(item => this.nameFilterApplied.includes(item.name));
+                }
+                if (this.healthFilterApplied.length > 0) {
+                    data = data.filter(item => this.healthFilterApplied.includes(item.healthLabel));
+                }
+                return data;
+            },
+
+            sortedOverviewData() {
+                return this.sortData(this.filteredOverviewData);
+            },
+
+            filteredCurrentTabData() {
+                let data = this.baseCurrentTabData;
+                if (this.nameFilterApplied.length > 0) {
+                    data = data.filter(item => this.nameFilterApplied.includes(item.name));
+                }
+                if (this.healthFilterApplied.length > 0) {
+                    data = data.filter(item => this.healthFilterApplied.includes(item.healthLabel));
+                }
+                return data;
+            },
+
+            sortedCurrentTabData() {
+                return this.sortData(this.filteredCurrentTabData);
+            },
+
+            summaryTotal() {
+                let physical = 0,
+                    closedConsumed = 0,
+                    openFrozen = 0,
+                    lockedTotal = 0,
+                    available = 0,
+                    dailySales14d = 0;
+                this.baseOverviewData.forEach(item => {
+                    physical += item.physical || 0;
+                    closedConsumed += item.closedConsumed || 0;
+                    openFrozen += item.openFrozen || 0;
+                    lockedTotal += item.lockedTotal || 0;
+                    available += item.available || 0;
+                    dailySales14d += item.dailySales14d || 0;
+                });
+                return { physical, closedConsumed, openFrozen, lockedTotal, available, dailySales14d };
+            },
+
+            rawDataText() {
+                return JSON.stringify({
+                    入库总表: this.inbound,
+                    活动锁定表: this.allocations,
+                    发放流水表: this.consumptions
+                }, null, 2);
+            }
+        },
+        methods: {
+            // ----- 核心：丰富item数据 -----
+            enrichItem(item, today) {
+                // 实际剩余天数：可发量 ÷ 近14天日均消耗
+                let actualDays = 0;
+                if (item.available <= 0) {
+                    actualDays = 0;
+                } else if (item.dailySales14d > 0) {
+                    actualDays = item.available / item.dailySales14d;
+                } else {
+                    actualDays = Infinity;
+                }
+
+                // 人工预估剩余天数：
+                // - 已关账：直接返回 0
+                // - 未关账：从计划关账时间算到今天
+                // - 为负数：显示"需更新预估时间"
+                let manualDays = null;
+                if (item.isClosed) {
+                    manualDays = 0;
+                } else if (item.available <= 0) {
+                    manualDays = 0;
+                } else if (item.manualEndDate && item.manualEndDate !== '') {
+                    const manualDate = new Date(item.manualEndDate);
+                    const diff = (manualDate - today) / (1000 * 60 * 60 * 24);
+                    if (diff > 0) {
+                        manualDays = diff;
+                    } else {
+                        manualDays = -1; // 负数，表示"需更新预估时间"
+                    }
+                }
+
+                // 预计发放到何时：使用实际天数推算
+                let endDate = '—';
+                if (actualDays === Infinity) {
+                    endDate = '长期';
+                } else if (actualDays > 0) {
+                    const d = new Date(today);
+                    d.setDate(d.getDate() + Math.ceil(actualDays));
+                    endDate = d.toISOString().slice(0, 10);
+                } else {
+                    endDate = '已发完';
+                }
+
+                // 健康标签
+                const months = item.availableMonths;
+                let healthLabel, badgeClass;
+                if (months === Infinity) { healthLabel = '无动销';
+                    badgeClass = 'badge-gray'; } else if (months > 6) { healthLabel = '需关注';
+                    badgeClass = 'badge-red'; } else if (months > 3) { healthLabel = '偏慢';
+                    badgeClass = 'badge-yellow'; } else if (months >= 1) { healthLabel = '正常';
+                    badgeClass = 'badge-green'; } else if (months < 0) { healthLabel = '超发异常';
+                    badgeClass = 'badge-gray'; } else { healthLabel = '快消';
+                    badgeClass = 'badge-blue'; }
+
+                return {
+                    ...item,
+                    actualDays: actualDays,
+                    manualDays: manualDays,
+                    healthLabel: healthLabel,
+                    badgeClass: badgeClass,
+                    estimatedEnd: endDate
+                };
+            },
+
+            // ----- 切换Tab -----
+            switchTab(tab) {
+                this.activeTab = tab;
+                this.nameFilterApplied = [];
+                this.healthFilterApplied = [];
+                this.nameFilterSelectedTemp = [];
+                this.healthFilterSelectedTemp = [];
+                this.activeFilter = null;
+                this.sortField = 'actualDays';
+                this.sortAsc = false;
+            },
+
+            // ----- 排序 -----
+            sortBy(field) {
+                if (this.sortField === field) {
+                    this.sortAsc = !this.sortAsc;
+                } else {
+                    this.sortField = field;
+                    this.sortAsc = false;
+                }
+            },
+
+            getSortClass(field) {
+                if (this.sortField !== field) return 'inactive';
+                return this.sortAsc ? 'asc' : 'desc';
+            },
+
+            getSortIcon(field) {
+                if (this.sortField !== field) return '↕';
+                return this.sortAsc ? '↑' : '↓';
+            },
+
+            sortData(data) {
+                if (!data || data.length === 0) return data;
+                const field = this.sortField;
+                const asc = this.sortAsc;
+                return [...data].sort((a, b) => {
+                    let va = a[field];
+                    let vb = b[field];
+                    if (va === Infinity) va = 999999;
+                    if (vb === Infinity) vb = 999999;
+                    if (va === undefined || va === null) va = '';
+                    if (vb === undefined || vb === null) vb = '';
+                    if (field === 'inboundDate' || field === 'estimatedEnd') {
+                        if (!va && !vb) return 0;
+                        if (!va) return 1;
+                        if (!vb) return -1;
+                        const da = new Date(va);
+                        const db = new Date(vb);
+                        if (isNaN(da.getTime()) && isNaN(db.getTime())) return 0;
+                        if (isNaN(da.getTime())) return 1;
+                        if (isNaN(db.getTime())) return -1;
+                        return asc ? da - db : db - da;
+                    }
+                    if (typeof va === 'number' && typeof vb === 'number') {
+                        return asc ? va - vb : vb - va;
+                    }
+                    const sa = String(va);
+                    const sb = String(vb);
+                    return asc ? sa.localeCompare(sb, 'zh') : sb.localeCompare(sa, 'zh');
+                });
+            },
+
+            // ----- 筛选 -----
+            toggleFilter(type) {
+                if (this.activeFilter === type) {
+                    this.activeFilter = null;
+                    return;
+                }
+                this.activeFilter = type;
+                if (type === 'name') {
+                    if (this.nameFilterApplied.length > 0) {
+                        this.nameFilterSelectedTemp = [...this.nameFilterApplied];
+                    } else {
+                        this.nameFilterSelectedTemp = this.nameFilterOptions.map(o => o.value);
+                    }
+                } else if (type === 'health') {
+                    if (this.healthFilterApplied.length > 0) {
+                        this.healthFilterSelectedTemp = [...this.healthFilterApplied];
+                    } else {
+                        this.healthFilterSelectedTemp = this.healthFilterOptions.map(o => o.value);
+                    }
+                }
+            },
+
+            applyNameFilter() {
+                this.nameFilterApplied = [...this.nameFilterSelectedTemp];
+                this.activeFilter = null;
+            },
+
+            applyHealthFilter() {
+                this.healthFilterApplied = [...this.healthFilterSelectedTemp];
+                this.activeFilter = null;
+            },
+
+            clearNameFilterTemp() { this.nameFilterSelectedTemp = []; },
+            clearHealthFilterTemp() { this.healthFilterSelectedTemp = []; },
+
+            selectAllNameFilter() {
+                this.nameFilterSelectedTemp = this.nameFilterOptions.map(o => o.value);
+            },
+
+            selectAllHealthFilter() {
+                this.healthFilterSelectedTemp = this.healthFilterOptions.map(o => o.value);
+            },
+
+            cancelFilter() { this.activeFilter = null; },
+
+            // ----- 核心计算 -----
+            compute() {
+                if (this.inbound.length === 0) return;
+
+                const today = new Date('2026-06-23');
+                const fourteenAgo = new Date(today);
+                fourteenAgo.setDate(fourteenAgo.getDate() - 14);
+                const thirtyAgo = new Date(today);
+                thirtyAgo.setDate(thirtyAgo.getDate() - 30);
+
+                const physicalMap = {};
+                this.inbound.forEach(r => {
+                    const key = r.name;
+                    if (!physicalMap[key]) physicalMap[key] = 0;
+                    physicalMap[key] += r.qty;
+                });
+
+                const consumedMap = {};
+                const frozenMap = {};
+                const manualEndDateMap = {};
+                const closedPlanMap = {};
+                const openPlanMap = {};
+
+                this.allocations.forEach(r => {
+                    const key = r.name;
+                    const status = (r.status || '').trim();
+                    const planQty = r.planQty || 0;
+
+                    if (r.manualEndDate && r.manualEndDate !== '') {
+                        const dateVal = new Date(r.manualEndDate);
+                        if (!isNaN(dateVal.getTime())) {
+                            if (!manualEndDateMap[key] || dateVal < new Date(manualEndDateMap[key])) {
+                                manualEndDateMap[key] = r.manualEndDate;
+                            }
+                        }
+                    }
+
+                    if (status === '已关账' || status === '已关帐' || status === 'closed') {
+                        if (!consumedMap[key]) consumedMap[key] = 0;
+                        consumedMap[key] += r.actualQty || 0;
+                        if (!closedPlanMap[key]) closedPlanMap[key] = 0;
+                        closedPlanMap[key] += planQty;
+                    } else {
+                        if (!frozenMap[key]) frozenMap[key] = 0;
+                        frozenMap[key] += r.freezeQty || 0;
+                        if (!openPlanMap[key]) openPlanMap[key] = 0;
+                        openPlanMap[key] += planQty;
+                    }
+                });
+
+                const totalConsumedMap = {};
+                const allKeys = new Set([...Object.keys(consumedMap), ...Object.keys(frozenMap)]);
+                allKeys.forEach(key => {
+                    totalConsumedMap[key] = (consumedMap[key] || 0) + (frozenMap[key] || 0);
+                });
+
+                const sales14dMap = {};
+                const sales30dMap = {};
+                this.consumptions.forEach(r => {
+                    const d = new Date(r.date);
+                    const key = r.name;
+                    if (d >= fourteenAgo && d <= today) {
+                        if (!sales14dMap[key]) sales14dMap[key] = 0;
+                        sales14dMap[key] += r.qty;
+                    }
+                    if (d >= thirtyAgo && d <= today) {
+                        if (!sales30dMap[key]) sales30dMap[key] = 0;
+                        sales30dMap[key] += r.qty;
+                    }
+                });
+
+                const allSkuNames = Object.keys(physicalMap);
+                const items = [];
+                let totalPhysical = 0,
+                    totalAvailable = 0,
+                    slowCount = 0,
+                    planCount = 0;
+
+                allSkuNames.forEach(name => {
+                    const physical = physicalMap[name] || 0;
+                    const consumed = totalConsumedMap[name] || 0;
+                    const closedPlan = closedPlanMap[name] || 0;
+                    const openPlan = openPlanMap[name] || 0;
+                    const available = physical - consumed;
+                    const planRemaining = (closedPlan > 0 ? closedPlan - (consumedMap[name] || 0) : 0) + (openPlan > 0 ? openPlan - (frozenMap[name] || 0) : 0);
+                    const monthly = sales30dMap[name] || 0;
+                    const daily14d = sales14dMap[name] || 0;
+                    const dailyAvg14d = daily14d / 14;
+
+                    let availMonths = monthly === 0 ? Infinity : available / monthly;
+                    const manualEndDate = manualEndDateMap[name] || null;
+
+                    const isClosed = (closedPlan > 0 && (frozenMap[name] || 0) === 0);
+                    const item = {
+                        sku: name,
+                        name: name,
+                        physical: physical,
+                        lockedTotal: consumed,
+                        available: available,
+                        planRemaining: planRemaining,
+                        monthlySales: monthly,
+                        availableMonths: availMonths,
+                        dailySales14d: Math.round(dailyAvg14d * 100) / 100,
+                        manualEndDate: manualEndDate,
+                        closedConsumed: consumedMap[name] || 0,
+                        openFrozen: frozenMap[name] || 0,
+                        planQty: closedPlan + openPlan,
+                        actualQty: consumedMap[name] || 0,
+                        freezeQty: frozenMap[name] || 0,
+                        status: isClosed ? '已关账' : '未关账',
+                        isClosed: isClosed
+                    };
+                    items.push(item);
+
+                    totalPhysical += physical;
+                    if (available > 0) totalAvailable += available;
+                    if (availMonths > 6 && availMonths !== Infinity) slowCount++;
+                    if (available > 0) planCount++;
+                });
+
+                this.computedItems = items;
+                this.kpi = {
+                    totalAvailable: Math.round(totalAvailable),
+                    totalPhysical: totalPhysical,
+                    totalSku: allSkuNames.length,
+                    slowSku: slowCount,
+                    planningSku: planCount
+                };
+            },
+
+            // ----- 文件上传 -----
+            validateConsumption(rows) {
+                const inboundNames = new Set(this.inbound.map(r => r.name));
+                const unmatched = [];
+                rows.forEach(row => {
+                    const nameKey = this.findKey(row, '权益名称', '商品名称', 'name', 'SKU名称');
+                    const name = nameKey ? String(row[nameKey]).trim() : '';
+                    if (name && !inboundNames.has(name)) {
+                        if (!unmatched.includes(name)) unmatched.push(name);
+                    }
+                });
+                return unmatched;
+            },
+
+            uploadFile(event, type) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                const ext = file.name.split('.').pop().toLowerCase();
+
+                const onParsed = (data) => {
+                    if (type === 'consumption') {
+                        if (this.inbound.length === 0) {
+                            alert('⚠️ 请先导入「入库总表」，再导入发放流水。');
+                            event.target.value = '';
+                            return;
+                        }
+                        const unmatched = this.validateConsumption(data);
+                        if (unmatched.length > 0) {
+                            this.modalUnmatched = unmatched;
+                            this.pendingConsumptionData = data;
+                            this.modalVisible = true;
+                            event.target.value = '';
+                            return;
+                        }
+                    }
+
+                    this.setData(type, data);
+                    this.uploadStatus[type] = `✅ ${data.length} 条 (${ext === 'csv' ? 'CSV' : 'Excel'})`;
+                    this.compute();
+                };
+
+                if (ext === 'csv') {
+                    reader.onload = (e) => {
+                        const data = this.parseCSV(e.target.result);
+                        onParsed(data);
+                    };
+                    reader.readAsText(file);
+                    return;
+                }
+
+                reader.onload = (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
+                    onParsed(json);
+                };
+                reader.readAsArrayBuffer(file);
+            },
+
+            parseCSV(text) {
+                const lines = text.split('\n').filter(line => line.trim() !== '');
+                if (lines.length === 0) return [];
+                const headers = lines[0].split(',').map(h => h.trim());
+                const result = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const values = lines[i].split(',').map(v => v.trim());
+                    if (values.length === 0 || values.every(v => v === '')) continue;
+                    const row = {};
+                    headers.forEach((h, idx) => {
+                        row[h] = values[idx] || '';
+                    });
+                    result.push(row);
+                }
+                return result;
+            },
+
+            findKey(obj, ...candidates) {
+                const keys = Object.keys(obj);
+                for (const c of candidates) {
+                    const found = keys.find(k => k.trim().toLowerCase() === c.toLowerCase());
+                    if (found) return found;
+                }
+                return null;
+            },
+
+            getRowValue(row, ...candidates) {
+                const key = this.findKey(row, ...candidates);
+                return key ? row[key] : '';
+            },
+
+            getRowRaw(row, ...candidates) {
+                // Try original raw fields first, then normalized row
+                const orig = row._orig || row;
+                const key = this.findKey(orig, ...candidates);
+                return key ? orig[key] : '';
+            },
+
+            async syncFromTencentDocs() {
+                this.syncing = true;
+                this.syncingError = null;
+                try {
+                    const isFileProtocol = window.location.protocol === 'file:';
+                    let inbRecords = [], allocRecords = [], consRecords = [];
+                    
+                    // file:// 协议下：优先尝试本地 JSON（因为 fetch 到 localhost 可能被阻止）
+                    // http:// 协议下：优先尝试 Bridge（实时数据）
+                    if (isFileProtocol) {
+                        console.log('file:// 协议，优先尝试本地数据文件...');
+                        const [localInb, localAlloc, localCons] = await Promise.all([
+                            fetch('data/data_inbound.json').then(r => r.json()).catch(() => null),
+                            fetch('data/data_allocation.json').then(r => r.json()).catch(() => null),
+                            fetch('data/data_consumption.json').then(r => r.json()).catch(() => null)
+                        ]);
+                        inbRecords = (localInb?.data?.records || []).map(r => r.fields || r);
+                        allocRecords = (localAlloc?.data?.records || []).map(r => r.fields || r);
+                        consRecords = (localCons?.data?.records || []).map(r => r.fields || r);
+                        this.fromLocal = true;
+                    }
+                    
+                    // 如果本地没有数据，或者不是 file:// 协议，尝试 Bridge
+                    if (inbRecords.length === 0 && allocRecords.length === 0 && consRecords.length === 0) {
+                        console.log('尝试 Bridge (localhost:3847)...');
+                        const [inboundData, allocationData, consumptionData] = await Promise.all([
+                            fetch('http://localhost:3847/api/sheets/inbound').then(r => r.json()).catch(() => null),
+                            fetch('http://localhost:3847/api/sheets/allocation').then(r => r.json()).catch(() => null),
+                            fetch('http://localhost:3847/api/sheets/consumption').then(r => r.json()).catch(() => null)
+                        ]);
+                        inbRecords = (inboundData?.data?.records || []).map(r => r.fields || r);
+                        allocRecords = (allocationData?.data?.records || []).map(r => r.fields || r);
+                        consRecords = (consumptionData?.data?.records || []).map(r => r.fields || r);
+                        this.fromLocal = false;
+                    }
+                    
+                    // Bridge 也无数据 → 再次尝试本地静态文件（作为备用）
+                    if (inbRecords.length === 0 && allocRecords.length === 0 && consRecords.length === 0) {
+                        console.log('Bridge 无响应，尝试加载本地数据文件...');
+                        const [localInb, localAlloc, localCons] = await Promise.all([
+                            fetch('data/data_inbound.json').then(r => r.json()).catch(() => null),
+                            fetch('data/data_allocation.json').then(r => r.json()).catch(() => null),
+                            fetch('data/data_consumption.json').then(r => r.json()).catch(() => null)
+                        ]);
+                        inbRecords = (localInb?.data?.records || []).map(r => r.fields || r);
+                        allocRecords = (localAlloc?.data?.records || []).map(r => r.fields || r);
+                        consRecords = (localCons?.data?.records || []).map(r => r.fields || r);
+                        this.fromLocal = true;
+                    }
+                    
+                    // 还是没有数据 → 报错
+                    if (inbRecords.length === 0 && allocRecords.length === 0 && consRecords.length === 0) {
+                        let msg = '⚠️ 无法加载数据\n\n';
+                        if (isFileProtocol) {
+                            msg += '检测到您是通过双击 HTML 文件直接打开的。\n\n';
+                            msg += '浏览器安全限制导致无法加载本地 JSON 数据文件。\n\n';
+                            msg += '解决方案：\n';
+                            msg += '1) 使用 "启动 Bridge.command" 启动（推荐）\n';
+                            msg += '2) 或启动本地服务器：cd "' + window.location.pathname.replace(/\/[^\/]*$/, '') + '" && python3 -m http.server 8080\n';
+                            msg += '   然后访问 http://localhost:8080';
+                        } else {
+                            msg += '请确认：\n1) 本地 Bridge 已启动（双击 启动 Bridge.command）\n2) 或者 data/data_inbound.json 等数据文件存在\n\n如需实时数据，需在配置了腾讯文档的电脑上运行 Bridge。';
+                        }
+                        alert(msg);
+                        return;
+                    }
+
+                    this.setData('inbound', inbRecords);
+                    this.setData('allocation', allocRecords);
+                    // 同步时也记录未匹配项（校验原始数据）
+                    const syncUnmatched = this.validateConsumption(consRecords);
+                    this.unmatchedNames = new Set(syncUnmatched);
+                    this.setData('consumption', consRecords);
+
+                    this.compute();
+                    this.lastSyncTime = new Date().toLocaleString('zh-CN');
+                    this.dataSource = this.fromLocal ? '📁 本地静态数据' : '☁️ 腾讯文档（实时同步）';
+
+                    const source = this.fromLocal ? '本地静态数据' : '腾讯文档（实时）';
+                    alert('✅ 同步成功！来源：' + source + '\n入库 ' + this.inbound.length + ' 条，活动 ' + this.allocations.length + ' 条，流水 ' + this.consumptions.length + ' 条');
+                } catch (err) {
+                    console.error('同步失败:', err);
+                    alert('❌ 同步失败：' + err.message + '\n请确认 data/ 文件夹中有数据文件。');
+                } finally {
+                    this.syncing = false;
+                }
+            },
+
+                        setData(type, rows) {
+                if (type === 'inbound') {
+                    this.inbound = rows.map(row => {
+                        const nameKey = this.findKey(row, '权益名称', '商品名称', 'name', 'SKU名称');
+                        const qtyKey = this.findKey(row, '期初数量', '数量', 'qty', '入库数量');
+                        const dateKey = this.findKey(row, '入库日期', '日期', 'date');
+                        let dateVal = dateKey ? row[dateKey] : '';
+                        if (typeof dateVal === 'number') {
+                            const d = new Date((dateVal - 25569) * 86400 * 1000);
+                            dateVal = d.toISOString().slice(0, 10);
+                        }
+                        return {
+                            name: nameKey ? String(row[nameKey]).trim() : '',
+                            qty: qtyKey ? parseFloat(row[qtyKey]) || 0 : 0,
+                            date: dateVal || null
+                        };
+                    }).filter(d => d.name && d.qty > 0);
+                } else if (type === 'allocation') {
+                    this.allocations = rows.map(row => {
+                        const nameKey = this.findKey(row, '权益名称', '商品名称', 'name', 'SKU名称');
+                        const actKey = this.findKey(row, '活动', '活动名称');
+                        const statusKey = this.findKey(row, '状态');
+                        const planKey = this.findKey(row, '计划分配数量', 'plan_qty', '计划数量', '分配数量');
+                        const actualKey = this.findKey(row, '实际发放数量', 'actual_qty', '实际数量');
+                        const freezeKey = this.findKey(row, '冻结量', 'freeze_qty', '锁定数量');
+                        const manualKey = this.findKey(row, '人工预估完成时间', '人工预估发放完成时间',
+                            'manual_end_date', '预估完成时间', '计划关账时间');
+
+                        const status = statusKey ? String(row[statusKey]).trim() : '';
+                        let manualEndDate = null;
+                        if (manualKey) {
+                            let val = String(row[manualKey]).trim();
+                            if (val) {
+                                if (!isNaN(val) && val.length <= 5) {
+                                    const d = new Date((parseFloat(val) - 25569) * 86400 * 1000);
+                                    if (!isNaN(d.getTime())) {
+                                        manualEndDate = d.toISOString().slice(0, 10);
+                                    }
+                                } else {
+                                    const d = new Date(val);
+                                    if (!isNaN(d.getTime())) {
+                                        manualEndDate = d.toISOString().slice(0, 10);
+                                    }
+                                }
+                            }
+                        }
+
+                        return {
+                            name: nameKey ? String(row[nameKey]).trim() : '',
+                            activity: actKey ? String(row[actKey]).trim() : '未分类',
+                            status: (status.includes('已关账') || status.includes('已关帐') || status.toLowerCase().includes('closed')) ?
+                                '已关账' : '未关账',
+                            planQty: planKey ? parseFloat(row[planKey]) || 0 : 0,
+                            actualQty: actualKey ? parseFloat(row[actualKey]) || 0 : 0,
+                            freezeQty: freezeKey ? parseFloat(row[freezeKey]) || 0 : 0,
+                            manualEndDate: manualEndDate
+                        };
+                    }).filter(d => d.name);
+                } else if (type === 'consumption') {
+                    this.consumptions = rows.map(row => {
+                        // Preserve original row for raw-data display
+                        const nameKey = this.findKey(row, '权益名称', '商品名称', 'name', 'SKU名称');
+                        const dateKey = this.findKey(row, '订单时间', '发放日期', '日期', 'date', '消耗日期');
+                        const qtyKey = this.findKey(row, '货品数量', '数量', 'qty', '发放数量');
+                        let dateVal = dateKey ? row[dateKey] : '';
+                        if (typeof dateVal === 'number') {
+                            const d = new Date((dateVal - 25569) * 86400 * 1000);
+                            dateVal = d.toISOString().slice(0, 10);
+                        }
+                        return {
+                            name: nameKey ? String(row[nameKey]).trim() : '',
+                            date: dateVal,
+                            qty: qtyKey ? parseFloat(row[qtyKey]) || 0 : 0,
+                            // Preserve original row fields for raw data table
+                            _orig: row
+                        };
+                    }).filter(d => d.name && d.date && d.qty > 0);
+                }
+            },
+
+            // ----- 模拟数据 -----
+            generateMockData() {
+                this.inbound = [
+                    { name: '【可口可乐】针织包', qty: 1152, date: '2026-01-05' },
+                    { name: '【可口可乐】针织包', qty: 200, date: '2026-03-01' },
+                    { name: '【阳光】线条小狗胖胖杯', qty: 2100, date: '2026-01-05' },
+                    { name: '【可口可乐】足球开瓶器冰箱贴', qty: 3200, date: '2026-01-05' },
+                    { name: '【可口可乐FIFA世界杯】变色铝杯', qty: 326, date: '2026-02-15' },
+                    { name: '【可口可乐】多功能收纳包', qty: 10, date: '2026-03-10' },
+                    { name: '【可口可乐】定制金饰1克', qty: 15, date: '2026-04-01' },
+                    { name: '【可口可乐】宠物服', qty: 15, date: '2026-04-01' },
+                    { name: '【雪碧】檀健次冰箱贴', qty: 500, date: '2026-05-01' },
+                    { name: '【酷兒】笔袋', qty: 1000, date: '2026-05-15' }
+                ];
+
+                this.allocations = [
+                    { name: '【可口可乐】针织包', activity: '福利社', status: '未关账', actualQty: 169,
+                        freezeQty: 234, manualEndDate: '2026-12-31' },
+                    { name: '【阳光】线条小狗胖胖杯', activity: '福利社', status: '未关账', actualQty: 284,
+                        freezeQty: 284, manualEndDate: null },
+                    { name: '【可口可乐】足球开瓶器冰箱贴', activity: '福利社', status: '未关账', actualQty: 500,
+                        freezeQty: 500, manualEndDate: null },
+                    { name: '【可口可乐FIFA世界杯】变色铝杯', activity: '福利社', status: '未关账', actualQty: 326,
+                        freezeQty: 326, manualEndDate: '2026-07-15' },
+                    { name: '【可口可乐】定制金饰1克', activity: '会员日', status: '已关账', actualQty: 4,
+                        freezeQty: 4, manualEndDate: null },
+                    { name: '【可口可乐】宠物服', activity: '会员日', status: '已关账', actualQty: 4, freezeQty: 4,
+                        manualEndDate: null },
+                    { name: '【雪碧】檀健次冰箱贴', activity: '雪碧活动', status: '未关账', actualQty: 268,
+                        freezeQty: 268, manualEndDate: '2026-08-20' },
+                    { name: '【酷兒】笔袋', activity: '酷兒活动', status: '未关账', actualQty: 400, freezeQty: 400,
+                        manualEndDate: null }
+                ];
+
+                const records = [];
+                const config = {
+                    '【可口可乐】针织包': 0.5,
+                    '【阳光】线条小狗胖胖杯': 20,
+                    '【可口可乐】足球开瓶器冰箱贴': 35,
+                    '【可口可乐FIFA世界杯】变色铝杯': 45,
+                    '【可口可乐】多功能收纳包': 55,
+                    '【可口可乐】定制金饰1克': 0.6,
+                    '【可口可乐】宠物服': 0.3,
+                    '【雪碧】檀健次冰箱贴': 25,
+                    '【酷兒】笔袋': 35
+                };
+                for (let d = new Date('2026-06-10'); d <= new Date('2026-06-23'); d.setDate(d.getDate() + 1)) {
+                    const dateStr = d.toISOString().slice(0, 10);
+                    for (const [name, avg] of Object.entries(config)) {
+                        let qty = Math.round(avg + (Math.random() - 0.5) * 4);
+                        qty = Math.max(0, qty);
+                        if (qty > 0) {
+                            records.push({ name, date: dateStr, qty });
+                        }
+                    }
+                }
+                this.consumptions = records;
+
+                this.uploadStatus = { inbound: null, allocation: null, consumption: null };
+                this.compute();
+                this.switchTab('__overview__');
+                if (this.activityTabs.length > 0) {
+                    this.activeTab = this.activityTabs[0];
+                } else {
+                    this.activeTab = '__overview__';
+                }
+            },
+
+            resetData() {
+                this.inbound = [];
+                this.allocations = [];
+                this.consumptions = [];
+                this.computedItems = [];
+                this.kpi = { totalAvailable: 0, totalPhysical: 0, totalSku: 0, slowSku: 0, planningSku: 0 };
+                this.uploadStatus = { inbound: null, allocation: null, consumption: null };
+                this.activeTab = '__overview__';
+                this.modalVisible = false;
+                this.modalUnmatched = [];
+                this.unmatchedNames = new Set();
+                this.pendingConsumptionData = null;
+                this.nameFilterApplied = [];
+                this.healthFilterApplied = [];
+                this.nameFilterSelectedTemp = [];
+                this.healthFilterSelectedTemp = [];
+                this.activeFilter = null;
+                this.sortField = 'actualDays';
+                this.sortAsc = false;
+            },
+
+            toggleUpload() { this.showUpload = !this.showUpload; },
+            toggleRawData() { this.showRaw = !this.showRaw; },
+
+            continueImport() {
+                // 保存未匹配的名称集合，用于后续高亮
+                this.unmatchedNames = new Set(this.modalUnmatched);
+                this.modalVisible = false;
+                // 继续导入数据
+                if (this.pendingConsumptionData) {
+                    this.setData('consumption', this.pendingConsumptionData);
+                    this.uploadStatus.consumption = `✅ ${this.pendingConsumptionData.length} 条 (含 ${this.modalUnmatched.length} 个未匹配)`;
+                    this.compute();
+                    this.pendingConsumptionData = null;
+                }
+            },
+
+            isUnmatched(row) {
+                const nameKey = this.findKey(row, '权益名称', '商品名称', 'name', 'SKU名称');
+                const name = nameKey ? String(row[nameKey]).trim() : '';
+                return this.unmatchedNames.has(name);
+            },
+
+            downloadSample() {
+                const content =
+                    `【奖品动销看板 · 3张表格式说明】
+
+            ============================================================
+            表1：入库总表 (inbound.xlsx)
+            列：权益名称, 期初数量, 入库日期
+
+            表2：活动锁定表 (allocation.xlsx)  ⭐ 核心
+            列：权益名称, 活动, 状态, 实际发放数量, 冻结量, 人工预估完成时间
+
+            表3：发放流水表 (consumption.xlsx)
+            列：权益名称, 货品编号, 活动, 订单时间, 货品数量, 备注
+            `;
+                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = '动销看板格式说明.txt';
+                a.click();
+                URL.revokeObjectURL(a.href);
+            }
+        },
+    });
+</script>
+</body>
+</html>
